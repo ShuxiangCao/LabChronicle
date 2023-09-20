@@ -199,7 +199,8 @@ class Chronicle(Singleton):
         self._active_record_book = None
         self._record_tracking_stack = None
 
-    def open_record_book(self, path: Optional[Union[pathlib.Path, str]] = None):
+    def open_record_book(
+            self, path: Optional[Union[pathlib.Path, str]] = None):
         """
         Open a record book.
 

@@ -33,10 +33,12 @@ class SampleClass(LoggableObject):
         self.ai = a
         self.bi = b
         self.ci = c
+        return 'abc'
 
     @log_and_record
     def sample_method_2(self, d, e, f=1):
         self.data = np.arange(30)
+        return 123
 
 
 def test_create_log(tmp_path):
@@ -92,6 +94,7 @@ def test_run_logs_and_read_logs(tmp_path):
     assert sample_method_1_entry.load_attribute('bi') == 2
     assert sample_method_1_entry.load_attribute('ci') == 3
     assert np.allclose(sample_method_1_entry.load_attribute('data'), np.arange(20))
+    assert sample_method_1_entry.load_return_values() == 'abc'
 
     # Check the children are correctly set for simple_method_2
     sample_method_2_entry = children[1]
@@ -100,3 +103,4 @@ def test_run_logs_and_read_logs(tmp_path):
     assert sample_method_2_entry.get_children_number() == 0
     assert sample_method_2_entry.get_recorded_attribute_names() == ['data']
     assert np.allclose(sample_method_2_entry.load_attribute('data'), np.arange(30))
+    assert sample_method_2_entry.load_return_values() == 123

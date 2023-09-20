@@ -37,6 +37,7 @@ class LoggableObject(object):
         self._register_log_and_record_args_map = {}
         self.logger = setup_logging(self.__class__.__qualname__)
         self._record_entry = None
+        self._browse_functions = []
 
     def __setattr__(self, key, value):
         """
@@ -50,7 +51,8 @@ class LoggableObject(object):
             '_loggable',
             '_register_log_and_record_args_map',
             'logger',
-            '_record_entry']
+            '_record_entry',
+            '_browse_functions']
 
         if '_record_entry' not in self.__dict__ or self._record_entry is None:
             # If the record entry is not in the dict, it means that the object
@@ -75,6 +77,15 @@ class LoggableObject(object):
             object: The copied object.
         """
         return copy.deepcopy(obj)
+
+    def register_browse_function(self, func: callable):
+        """
+        Register the browse functions of the loggable object.
+
+        Parameters:
+            func (function): The browse function to register.
+        """
+        self._browse_functions.append(func)
 
     def register_log_and_record_args(
             self,
@@ -105,11 +116,11 @@ class LoggableObject(object):
 
     @staticmethod
     def _rebuild_args_dict(func: Callable[...,
-    Any],
+                                          Any],
                            called_args: List[Any],
                            called_kwargs: Dict[str,
                            Any]) -> Dict[str,
-    Any]:
+                                         Any]:
         """
         Reconstruct the arguments dictionary for a given function based on its signature and the called arguments.
 
@@ -237,7 +248,7 @@ class RecordBook(object):
 
     def get_record_by_path(self,
                            path: Union[pathlib.Path,
-                           str]) -> 'RecordEntry':
+                                       str]) -> 'RecordEntry':
         """
         Get a record by its path.
 
@@ -453,6 +464,24 @@ class RecordEntry(object):
         self.save_attribute('__object__', obj)
         self.save_attribute('__touched_attributes__', self._touched_attributes)
 
+    def record_return_values(self, return_values: Any):
+        """
+        Record the return values of the function.
+
+        Parameters:
+            return_values (Any): The return values of the function.
+        """
+        self.save_attribute('__return_values__', return_values)
+
+    def load_return_values(self):
+        """
+        Load the return values of the function.
+
+        Returns:
+            Any: The return values of the function.
+        """
+        return self.load_attribute('__return_values__')
+
     def record_args(self, args: list, kwargs: dict):
         """
         Record the arguments of the function.
@@ -556,7 +585,7 @@ class RecordEntry(object):
         path = self._get_attribute_path(key)
         loaded_data = self._record_book.handler.get_record_by_path(path)
 
-        if type(loaded_data) == bytes:
+        if isinstance(loaded_data, bytes):
             loaded_data = loaded_data.decode()
 
         if isinstance(loaded_data, np.void):
@@ -605,7 +634,7 @@ class RecordEntry(object):
             RecordEntry(
                 record_book=self._record_book,
                 full_path=self.get_path() /
-                          name) for name in children_names]
+                name) for name in children_names]
 
     @property
     def parent(self):

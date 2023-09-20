@@ -10,12 +10,48 @@ logger = setup_logging(__name__)
 @decorator.decorator
 def log_and_record(func, *args, **kwargs):
     """
-    Decorator for the functions that want to be logged. The function must be a method of a LoggableObject.
+    Decorator function for the functions that want to be logged. The function must be a method of a LoggableObject.
+    Using this decorator will record the object and modified attributes within this function call
+    after the function execution.
 
     Parameters:
         func (function): The function to be logged.
         args (list): The arguments of the function.
         kwargs (dict): The keyword arguments of the function.
+
+    Returns:
+        Any: The return value of the function.
+    """
+    return _log_and_record(func, args, kwargs)
+
+
+@decorator.decorator
+def log_event(func, *args, **kwargs):
+    """
+       Decorator function for the functions that want to be logged. The function must be a method of a LoggableObject.
+       Using this decorator will only record return values and arguments of the function.
+
+       Parameters:
+           func (function): The function to be logged.
+           args (list): The arguments of the function.
+           kwargs (dict): The keyword arguments of the function.
+
+       Returns:
+           Any: The return value of the function.
+       """
+    return _log_and_record(func, args, kwargs, record_details=False)
+
+
+def _log_and_record(func, args, kwargs, record_details=True):
+    """
+    Decorator function for the functions that want to be logged. The function must be a method of a LoggableObject.
+
+    Parameters:
+        func (function): The function to be logged.
+        args (list): The arguments of the function.
+        kwargs (dict): The keyword arguments of the function.
+        record_details (bool): Optional. Whether to record the object and attributes after the function execution.
+                                If false, only the arguments and return values are recorded.
 
     Returns:
         Any: The return value of the function.
@@ -48,11 +84,55 @@ def log_and_record(func, *args, **kwargs):
         record.record_args(args[1:], kwargs)
 
         # Save the argument to the class as well.
-        self.set_record_entry(record)
         self.register_log_and_record_args(func, args[1:], kwargs)
+
+        if record_details:
+            self.set_record_entry(record)
         retval = func(*args, **kwargs)
-        self.set_record_entry(None)
+        if record_details:
+            self.set_record_entry(None)
+
+        record.record_return_values(retval)
+
         # Take a snapshot of the object after finish the function execution.
-        record.record_object(self)
+        if record_details:
+            record.record_object(self)
 
     return retval
+
+
+def register_browser_function(*args, **kwargs):
+    """
+    Decorator function for the functions that used to visualize data of the class.
+     The function must be a method of a LoggableObject.
+
+    Parameters:
+        args (list): The arguments of the function.
+        kwargs (dict): The keyword arguments of the function.
+
+    Returns:
+        Any: The return value of the function.
+    """
+    self = args[0]
+
+    def inner_func(func):
+        """
+        Decorator function for the functions that used to visualize data of the class.
+        The function must be a method of a LoggableObject.
+
+        Parameters:
+            func (function): The function to be registered.
+
+        Returns:
+            Any: The same function.
+        """
+        if not isinstance(self, LoggableObject):
+            msg = f'Function {func.__qualname__} is not a method of a LoggableObject.'
+            logger.error(msg)
+            raise RuntimeError(msg)
+
+        self.register_browse_function((func, args, kwargs))
+
+        return func
+
+    return inner_func
