@@ -58,5 +58,5 @@ def test_list_records(tmp_path):
 
     handler.add_record(pathlib.Path('group/dataset'), record)
 
-    assert list(handler.list_records(pathlib.Path('/'))) == ['group']
+    assert list(handler.list_records(pathlib.Path('/'))) == ['group','root']
     assert list(handler.list_records(pathlib.Path('/group'))) == ['dataset']

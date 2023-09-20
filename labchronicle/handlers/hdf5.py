@@ -1,7 +1,10 @@
+import pickle
 from typing import Any, Union
 import h5py
 from contextlib import contextmanager
 import pathlib
+
+import numpy as np
 
 from .handlers import RecordHandlersBase
 
@@ -19,7 +22,7 @@ class RecordHandlerHDF5(RecordHandlersBase):
         pass
 
     @contextmanager
-    def _open_file(self, mode):
+    def _open_file(self, mode: str):
         """
             Open the HDF5 file. Use `with` statement with this function to operate hdf5 files.
 
@@ -30,7 +33,15 @@ class RecordHandlerHDF5(RecordHandlersBase):
                 file: The HDF5 file object.
         """
 
-        h5 = h5py.File(self._config['log_path'], mode)
+        path = self._config['log_path']
+
+        if isinstance(path, str):
+            path = pathlib.Path(path)
+
+        if not path.parent.exists():
+            path.parent.mkdir(parents=True)
+
+        h5 = h5py.File(path, mode)
         try:
             yield h5
         finally:
@@ -40,7 +51,8 @@ class RecordHandlerHDF5(RecordHandlersBase):
         """
         Initialize a new record book.
         """
-        with self._open_file('w'):
+        with self._open_file('w') as f:
+            f.create_group('root')
             pass
         self._initiated = True
 
@@ -66,6 +78,18 @@ class RecordHandlerHDF5(RecordHandlersBase):
         if isinstance(record_path, pathlib.Path):
             record_path = record_path.as_posix()
 
+        # Check the data type
+        if isinstance(record, np.ndarray):
+            # Save numpy directly
+            pass
+        elif isinstance(record, str):
+            # Save string directly
+            pass
+        else:
+            # Pickle and convert to np.void
+            pickled_record = pickle.dumps(record)
+            record = np.void(pickled_record)
+
         with self._open_file('a') as f:
             f.create_dataset(record_path, data=record)
 
@@ -86,36 +110,6 @@ class RecordHandlerHDF5(RecordHandlersBase):
 
         with self._open_file('r') as f:
             return f[record_path][()]
-
-    def get_record_by_id(self, record_id: str):
-        """
-        Get a record by its id.
-
-        Parameters:
-            record_id (str): The record id.
-
-        Returns:
-            Any: The record.
-        """
-        self._check_initiated()
-
-        raise NotImplementedError()
-
-    def get_record_by_timestamp(self, record_time: int):
-        """
-        Get a record by its timestamp.
-
-        Parameters:
-            record_time (int): The timestamp of the record.
-
-        Returns:
-            Any: The record.
-        """
-
-        # Iterate through all the records and do binary search
-        self._check_initiated()
-
-        raise NotImplementedError()
 
     def list_records(self, record_path: Union[pathlib.Path, str]) -> list:
         """

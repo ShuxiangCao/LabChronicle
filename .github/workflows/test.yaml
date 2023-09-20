@@ -29,4 +29,4 @@ jobs:
       - name: Test with pytest
         run: |
           pip install pytest pytest-cov
-          pytest --cov=labcronicle --cov-report=xml --cov-report=term-missing tests/
+          pytest --cov=. 

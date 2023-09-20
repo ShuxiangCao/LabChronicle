@@ -5,7 +5,7 @@ import uuid
 from contextlib import contextmanager
 import datetime
 import yaml
-from typing import Optional
+from typing import Optional, Union
 
 from .core import RecordBook, RecordEntry
 from .logger import setup_logging
@@ -33,7 +33,17 @@ class Singleton(object):
         """
         if not isinstance(cls._instance, cls):
             cls._instance = object.__new__(cls)
+            cls._instance._initialized = False
         return cls._instance
+
+    def __init__(self):
+        """
+        Initialize the singleton class.
+        """
+        if self._initialized:
+            return
+
+        self._initialized = True
 
 
 class Chronicle(Singleton):
@@ -42,7 +52,7 @@ class Chronicle(Singleton):
     It is used as a singleton.
     """
 
-    def __init__(self, config_path: Optional[str] = None):
+    def __init__(self, config_path: Optional[Union[pathlib.Path, str]] = None):
         """
         Initialize the Chronicle class.
 
@@ -50,12 +60,15 @@ class Chronicle(Singleton):
             config_path (str): Optional. The path to the configuration file.
         """
 
+        if self._initialized:
+            return
+
         self._config = self.load_config(config_path)
         self._active_record_book = None
         self._record_tracking_stack = None
         self._log_start_time = None
 
-        pass
+        super().__init__()
 
     def load_config(self, config_path: Optional[str] = None):
         """
@@ -103,14 +116,17 @@ class Chronicle(Singleton):
         """
 
         if not isinstance(config, dict):
-            raise ValueError('Invalid configuration file. Expected a dictionary, got a {type(config)} instead.')
+            raise ValueError(
+                'Invalid configuration file. Expected a dictionary, got a {type(config)} instead.')
 
         if 'log_path' not in config:
-            raise ValueError('log_path is not specified in the configuration file. Please specify the'
-                             ' LAB_CHRONICLE_LOG_DIR environment variable.')
+            raise ValueError(
+                'log_path is not specified in the configuration file. Please specify the'
+                ' LAB_CHRONICLE_LOG_DIR environment variable.')
         if 'handler' not in config:
-            raise ValueError('handlers is not specified in the configuration file. Please specify the'
-                             ' LAB_CHRONICLE_HANDLER environment variable.')
+            raise ValueError(
+                'handlers is not specified in the configuration file. Please specify the'
+                ' LAB_CHRONICLE_HANDLER environment variable.')
 
     def start_log(self, name: str = None):
         """
@@ -128,8 +144,10 @@ class Chronicle(Singleton):
         record_book_config = copy.deepcopy(self._config)
         record_book_config['log_path'] = path.as_posix()
 
-        self._active_record_book = RecordBook(enable_write=True, config=record_book_config)
-        self._record_tracking_stack = [self._active_record_book.get_root_entry()]
+        self._active_record_book = RecordBook(
+            enable_write=True, config=record_book_config)
+        self._record_tracking_stack = [
+            self._active_record_book.get_root_entry()]
         self._log_start_time = self._active_record_book.get_start_time()
 
     @contextmanager
@@ -146,18 +164,19 @@ class Chronicle(Singleton):
                 pass
             return
 
-        record_timestamp = int(datetime.datetime.now().timestamp()) - self._log_start_time
+        record_timestamp = int(
+            datetime.datetime.now().timestamp()) - self._log_start_time
 
         if len(self._record_tracking_stack) == 0:
             msg = 'Log records compromised.'
             logger.error(msg)
             raise ValueError(msg)
         else:
-            record_order = len(self._record_tracking_stack[-1].get_children_number())
+            record_order = self._record_tracking_stack[-1].get_children_number()
             record_path = self._record_tracking_stack[-1].get_path()
 
         new_record = RecordEntry(timestamp=record_timestamp,
-                                 record_id=uuid.uuid4(),
+                                 record_id=str(uuid.uuid4()),
                                  record_book=self._active_record_book,
                                  record_order=record_order,
                                  base_path=record_path)
@@ -170,7 +189,8 @@ class Chronicle(Singleton):
             last_record = self._record_tracking_stack.pop()
 
             # Write the link of uuid to the path
-            self._active_record_book.handler.add_record(f'/uuid/{last_record.record_id}', last_record.get_path())
+            self._active_record_book.handler.add_record(
+                f'/uuid/{last_record.record_id}', str(last_record.get_path()))
 
     def end_log(self):
         """
@@ -178,3 +198,19 @@ class Chronicle(Singleton):
         """
         self._active_record_book = None
         self._record_tracking_stack = None
+
+    def open_record_book(self, path: Optional[Union[pathlib.Path, str]] = None):
+        """
+        Open a record book.
+
+        Parameters:
+            path (str): Optional. The path to the record book. If not specified, use the default path.
+        """
+        if path is None:
+            path = self._config['log_path']
+
+        record_book_config = copy.deepcopy(self._config)
+        record_book_config['log_path'] = path
+
+        return RecordBook(
+            enable_write=False, config=record_book_config)

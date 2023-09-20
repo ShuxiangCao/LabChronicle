@@ -48,9 +48,10 @@ def log_and_record(func, *args, **kwargs):
         record.record_args(args[1:], kwargs)
 
         # Save the argument to the class as well.
+        self.set_record_entry(record)
         self.register_log_and_record_args(func, args[1:], kwargs)
         retval = func(*args, **kwargs)
-
+        self.set_record_entry(None)
         # Take a snapshot of the object after finish the function execution.
         record.record_object(self)
 

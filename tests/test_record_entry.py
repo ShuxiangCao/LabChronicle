@@ -1,9 +1,11 @@
+import numpy as np
 import pytest
 from unittest.mock import MagicMock, patch
 import uuid
 from pathlib import Path
 
 from labchronicle.core import RecordEntry
+from labchronicle.core import RecordBook
 
 
 # Mock the RecordBook and its handler
@@ -109,7 +111,7 @@ def test_save_load_attribute(sample_record_entry):
     sample_record_entry.save_attribute("key", "value")
     sample_record_entry._record_book.handler.add_record.assert_called_with(
         sample_record_entry._get_attribute_path("key"), "value")
-    sample_record_entry.load_attribute("key")
+    load_result = sample_record_entry.load_attribute("key")
     sample_record_entry._record_book.handler.get_record_by_path.assert_called_with(
         sample_record_entry._get_attribute_path("key"))
 
@@ -148,3 +150,62 @@ def test_properties(sample_record_entry):
     assert isinstance(sample_record_entry.timestamp, int)
     assert isinstance(sample_record_entry.record_order, int)
     assert isinstance(sample_record_entry.base_path, Path)
+
+
+class SampleClass:
+    def __init__(self):
+        self.attr1 = "value1"
+        self.attr2 = "value2"
+
+
+def test_integration_save_load_value(tmp_path):
+    config = {
+        'log_path': str(tmp_path / "test.hdf5"),
+        'handler': 'hdf5'
+    }
+
+    record_book = RecordBook(config, enable_write=True)
+    new_entry = RecordEntry(record_book=record_book,
+                            timestamp=1234567890,
+                            record_id=str(uuid.uuid4()),
+                            record_order=1,
+                            base_path=Path("/root/0-abc.edf"))
+
+    new_entry.set_name('test_function')
+
+    # Test 1: saving strings
+
+    new_entry.save_attribute("key1", "value1")
+    new_entry.save_attribute("key2", "value2")
+    loaded_key1 = new_entry.load_attribute("key1")
+    loaded_key2 = new_entry.load_attribute("key2")
+
+    assert loaded_key1 == "value1"
+    assert loaded_key2 == "value2"
+
+    # Test 2: saving numpy arrays
+
+    random_values = np.random.rand(10, 10)
+    new_entry.save_attribute("key3", random_values)
+    loaded_key3 = new_entry.load_attribute("key3")
+    assert isinstance(loaded_key3, np.ndarray)
+    assert loaded_key3.shape == (10, 10)
+    assert np.allclose(loaded_key3, random_values)
+
+    # Test 3: saving objects
+
+    sample_object = SampleClass()
+    new_entry.save_attribute("key4", sample_object)
+    loaded_key4 = new_entry.load_attribute("key4")
+
+    assert isinstance(loaded_key4, SampleClass)
+    assert loaded_key4.attr1 == "value1"
+    assert loaded_key4.attr2 == "value2"
+
+    # Test 4: saving lists
+
+    new_entry.save_attribute("key5", [1, 2, 3])
+    loaded_key5 = new_entry.load_attribute("key5")
+
+    assert isinstance(loaded_key5, list)
+    assert loaded_key5 == [1, 2, 3]
