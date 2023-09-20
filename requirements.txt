@@ -1,0 +1,5 @@
+fsspec
+numpy
+pyyaml
+decorator
+h5py
