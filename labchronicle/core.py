@@ -19,6 +19,15 @@ import json
 
 logger = setup_logging(__name__)
 
+_reserved_keys = [
+    '_loggable',
+    '_register_log_and_record_args_map',
+    'logger',
+    '_record_entry',
+    '_browse_functions',
+    '__dict__'
+]
+
 
 class LoggableObject(object):
     """
@@ -35,9 +44,20 @@ class LoggableObject(object):
 
     def __init__(self):
         self._register_log_and_record_args_map = {}
-        self.logger = setup_logging(self.__class__.__qualname__)
+        self.logger = setup_logging(self.hrid)
         self._record_entry = None
         self._browse_functions = []
+
+    @property
+    def hrid(self):
+        """
+        Get the human readable id of the loggable object. Default to the class name.
+        Override this method to provide a more meaningful id.
+
+        Returns:
+            str: The human readable id of the loggable object.
+        """
+        return self.__class__.__qualname__ + '@' + str(id(self))
 
     def __setattr__(self, key, value):
         """
@@ -47,12 +67,11 @@ class LoggableObject(object):
             key (str): The name of the attribute.
             value (Any): The value of the attribute.
         """
-        reserved_keys = [
-            '_loggable',
-            '_register_log_and_record_args_map',
-            'logger',
-            '_record_entry',
-            '_browse_functions']
+
+        if key in _reserved_keys:
+            # If the key is reserved, simply set the attribute.
+            super().__setattr__(key, value)
+            return
 
         if '_record_entry' not in self.__dict__ or self._record_entry is None:
             # If the record entry is not in the dict, it means that the object
@@ -60,10 +79,40 @@ class LoggableObject(object):
             super().__setattr__(key, value)
             return
 
-        if key not in reserved_keys:
-            self._record_entry.touch_attribute(key)
-
+        self._record_entry.touch_attribute(key)
         super().__setattr__(key, value)
+
+    def __repr__(self):
+        """
+        Override the `__repr__` method to provide a more meaningful representation of the loggable object.
+
+        Returns:
+            str: The representation of the loggable object.
+        """
+
+        return f'<{self.hrid}>'
+
+    def __getattribute__(self, key):
+        """
+        Override the `__getattribute__` method to record the attributes.
+        """
+
+        result = super().__getattribute__(key)
+
+        if key in _reserved_keys:
+            return result
+
+        if '_record_entry' not in self.__dict__ or self._record_entry is None:
+            # If the record entry is not in the dict, it means that the object
+            # is not being monitored.
+            return result
+
+        if inspect.isroutine(result):
+            return result
+
+        self._record_entry.touch_attribute(key)
+
+        return result
 
     @staticmethod
     def _safe_deepcopy(obj):
@@ -78,14 +127,16 @@ class LoggableObject(object):
         """
         return copy.deepcopy(obj)
 
-    def register_browse_function(self, func: callable):
+    def register_browse_function(self, func: callable, args: list, kwargs: dict):
         """
         Register the browse functions of the loggable object.
 
         Parameters:
             func (function): The browse function to register.
+            args (list): The arguments of the function.
+            kwargs (dict): The keyword arguments of the function.
         """
-        self._browse_functions.append(func)
+        self._browse_functions.append((func, args, kwargs))
 
     def register_log_and_record_args(
             self,
@@ -116,11 +167,11 @@ class LoggableObject(object):
 
     @staticmethod
     def _rebuild_args_dict(func: Callable[...,
-                                          Any],
+    Any],
                            called_args: List[Any],
                            called_kwargs: Dict[str,
                            Any]) -> Dict[str,
-                                         Any]:
+    Any]:
         """
         Reconstruct the arguments dictionary for a given function based on its signature and the called arguments.
 
@@ -176,7 +227,7 @@ class LoggableObject(object):
         """
 
         if func.__qualname__ not in self._register_log_and_record_args_map:
-            msg = f'Function {func.__qualname__} is not registered in {self.__class__.__qualname__}. '
+            msg = f'Function {func.__qualname__} is not registered in {self.hrid}. '
             self.logger.error(msg)
             raise ValueError(msg)
 
@@ -248,7 +299,7 @@ class RecordBook(object):
 
     def get_record_by_path(self,
                            path: Union[pathlib.Path,
-                                       str]) -> 'RecordEntry':
+                           str]) -> 'RecordEntry':
         """
         Get a record by its path.
 
@@ -634,7 +685,7 @@ class RecordEntry(object):
             RecordEntry(
                 record_book=self._record_book,
                 full_path=self.get_path() /
-                name) for name in children_names]
+                          name) for name in children_names]
 
     @property
     def parent(self):

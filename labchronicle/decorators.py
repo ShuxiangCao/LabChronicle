@@ -89,6 +89,7 @@ def _log_and_record(func, args, kwargs, record_details=True):
         if record_details:
             self.set_record_entry(record)
         retval = func(*args, **kwargs)
+
         if record_details:
             self.set_record_entry(None)
 
@@ -131,7 +132,7 @@ def register_browser_function(*args, **kwargs):
             logger.error(msg)
             raise RuntimeError(msg)
 
-        self.register_browse_function((func, args, kwargs))
+        self.register_browse_function(func, args, kwargs)
 
         return func
 
