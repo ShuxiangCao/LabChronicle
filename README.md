@@ -1,7 +1,7 @@
 # LabChronicle
 
 [![Test](https://github.com/ShuxiangCao/LabChronicle/actions/workflows/test.yaml/badge.svg)](https://github.com/ShuxiangCao/LabChronicle/actions/workflows/test.yaml)
-[![codecov](https://codecov.io/gh/leekgroup/LabChronicle/branch/master/graph/badge.svg)](https://codecov.io/gh/leekgroup/LabChronicle)
+[![codecov](https://codecov.io/gh/ShuxiangCao/LabChronicle/graph/badge.svg?token=EDDTTE9Q9P)](https://codecov.io/gh/ShuxiangCao/LabChronicle)
 [![Documentation Status](https://readthedocs.org/projects/labchronicle/badge/?version=latest)](https://labchronicle.readthedocs.io/en/latest/?badge=latest)
 [![PyPI version](https://badge.fury.io/py/labchronicle.svg)](https://badge.fury.io/py/labchronicle)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
