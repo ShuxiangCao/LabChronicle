@@ -235,7 +235,7 @@ class LoggableObject(object):
 
         return self._rebuild_args_dict(func, val[0], val[1])
 
-    def set_record_entry(self, record_entry: 'RecordEntry'):
+    def set_record_entry(self, record_entry: Optional['RecordEntry'] = None):
         """
         Set the record entry of the loggable object. When record entry is set, the loggable object will start to
         record the attributes to the record entry.

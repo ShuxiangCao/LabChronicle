@@ -91,7 +91,7 @@ def _log_and_record(func, args, kwargs, record_details=True):
         retval = func(*args, **kwargs)
 
         if record_details:
-            self.set_record_entry(None)
+            self.set_record_entry()
 
         record.record_return_values(retval)
 
