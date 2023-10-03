@@ -1,5 +1,11 @@
 # LabChronicle
 
+[![Build Status](https://travis-ci.com/leekgroup/LabChronicle.svg?branch=master)](https://travis-ci.com/leekgroup/LabChronicle)
+[![codecov](https://codecov.io/gh/leekgroup/LabChronicle/branch/master/graph/badge.svg)](https://codecov.io/gh/leekgroup/LabChronicle)
+[![Documentation Status](https://readthedocs.org/projects/labchronicle/badge/?version=latest)](https://labchronicle.readthedocs.io/en/latest/?badge=latest)
+[![PyPI version](https://badge.fury.io/py/labchronicle.svg)](https://badge.fury.io/py/labchronicle)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 LabChronicle is a python package to track the execution of python class, particularly for physical experiment, and
 store its values. The way LabChronicle works is by monitoring the decorated functions, and detect any access to the
 class attribute, and mark them modified. The modified attributes are then stored in a database, after the function
@@ -125,7 +131,7 @@ pytest
 
 ## License
 
-LabChronicle is licensed under the <haven't decided> license. See the LICENSE file for details.
+LabChronicle is licensed under the MIT license. See the LICENSE file for details.
 
 ## Acknowledgement
 
