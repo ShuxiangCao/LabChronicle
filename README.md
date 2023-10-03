@@ -115,8 +115,6 @@ The record entry can be directly load by the id.
 record = record_book.get_record_entry_by_id("The uuid of the record")
 ```
 
-# Development
-
 ## Testing
 
 The test can be run using `pytest`:
