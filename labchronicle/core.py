@@ -14,7 +14,7 @@ import numpy as np
 
 from .logger import setup_logging
 from .handlers import get_handler, RecordHandlersBase
-from .utils import get_system_info
+from .utils import get_system_info, find_methods_with_tag
 import json
 
 logger = setup_logging(__name__)
@@ -29,7 +29,19 @@ _reserved_keys = [
 ]
 
 
-class LoggableObject(object):
+class SetBrowserFunctionAttributeMeta(type):
+    """
+    A metaclass that set class attributes from the base class to the subclass,
+    making sure they do not share the same reference.
+    """
+
+    def __new__(mcls, name, bases, class_dict):
+        new_class = super().__new__(mcls, name, bases, class_dict)
+        new_class._browse_functions = []
+        return new_class
+
+
+class LoggableObject(metaclass=SetBrowserFunctionAttributeMeta):
     """
     This is the base class for all classes that want to be logged.
     Any new attribute added to the loggable objects will be recorded, and when `record` a function all,
@@ -46,7 +58,6 @@ class LoggableObject(object):
         self._register_log_and_record_args_map = {}
         self.logger = setup_logging(self.hrid)
         self._record_entry = None
-        self._browse_functions = []
 
     @property
     def hrid(self):
@@ -131,16 +142,14 @@ class LoggableObject(object):
         """
         return copy.deepcopy(obj)
 
-    def register_browse_function(self, func: callable, args: list, kwargs: dict):
+    def get_browser_functions(self):
         """
-        Register the browse functions of the loggable object.
+        Get the browser functions of the loggable object.
 
-        Parameters:
-            func (function): The browse function to register.
-            args (list): The arguments of the function.
-            kwargs (dict): The keyword arguments of the function.
+        Returns:
+            list: The browser functions of the loggable object.
         """
-        self._browse_functions.append((func, args, kwargs))
+        return find_methods_with_tag(self, '_browser_function')
 
     def register_log_and_record_args(
             self,

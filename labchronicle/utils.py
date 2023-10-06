@@ -1,3 +1,4 @@
+import inspect
 import os
 import datetime
 import getpass
@@ -62,3 +63,21 @@ def get_log_path(main_dir: Path, name: str) -> Path:
     log_dir = main_dir / jupyter_user / year_month / day / day_time
 
     return log_dir
+
+
+def find_methods_with_tag(instance: object, tag_name: str) -> list:
+    """
+    Find all methods with the given tag name.
+
+    Parameters:
+        instance (object): The instance to search for the methods.
+        tag_name (str): The name of the tag.
+
+    Returns:
+        tagged_methods (list): A list of tuples of the method name and the method.
+    """
+    tagged_methods = []
+    for name, method in inspect.getmembers(instance, predicate=inspect.ismethod):
+        if getattr(method, tag_name, None):
+            tagged_methods.append((name, method))
+    return tagged_methods

@@ -1,3 +1,5 @@
+import inspect
+
 import decorator
 
 from .logger import setup_logging
@@ -114,7 +116,6 @@ def register_browser_function(*args, **kwargs):
     Returns:
         Any: The return value of the function.
     """
-    self = args[0]
 
     def inner_func(func):
         """
@@ -127,12 +128,10 @@ def register_browser_function(*args, **kwargs):
         Returns:
             Any: The same function.
         """
-        if not isinstance(self, LoggableObject):
-            msg = f'Function {func.__qualname__} is not a method of a LoggableObject.'
-            logger.error(msg)
-            raise RuntimeError(msg)
 
-        self.register_browse_function(func, args, kwargs)
+        func._browser_function = True
+        func._browser_function_args = args
+        func._browser_function_kwargs = kwargs
 
         return func
 
