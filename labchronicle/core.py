@@ -97,12 +97,16 @@ class LoggableObject(object):
         Override the `__getattribute__` method to record the attributes.
         """
 
-        result = super().__getattribute__(key)
+        # Make sure we use the original __getattribute__ method, to avoid infinite recursion
+        #  that may be induced by the child class overriding the __getattribute__ method.
+        get_attribute = super().__getattribute__
+
+        result = get_attribute(key)
 
         if key in _reserved_keys:
             return result
 
-        if '_record_entry' not in self.__dict__ or self._record_entry is None:
+        if '_record_entry' not in get_attribute('__dict__') or get_attribute('_record_entry') is None:
             # If the record entry is not in the dict, it means that the object
             # is not being monitored.
             return result
@@ -110,7 +114,7 @@ class LoggableObject(object):
         if inspect.isroutine(result):
             return result
 
-        self._record_entry.touch_attribute(key)
+        get_attribute('_record_entry').touch_attribute(key)
 
         return result
 
