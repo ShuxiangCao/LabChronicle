@@ -73,9 +73,12 @@ def _log_and_record(func, args, kwargs, record_details=True):
         logger.error(msg)
         raise RuntimeError(msg)
 
+    self.register_log_and_record_args(func, args[1:], kwargs)
+
     chronicle = Chronicle()
 
     with chronicle.new_record() as record:
+
         if record is None:
             # There are no active record books. Simply execute the function.
             return func(*args, **kwargs)
@@ -86,7 +89,6 @@ def _log_and_record(func, args, kwargs, record_details=True):
         record.record_args(args[1:], kwargs)
 
         # Save the argument to the class as well.
-        self.register_log_and_record_args(func, args[1:], kwargs)
 
         if record_details:
             self.set_record_entry(record)

@@ -176,8 +176,6 @@ class LoggableObject(metaclass=SetBrowserFunctionAttributeMeta):
         self._register_log_and_record_args_map[func.__qualname__] = (
             args, kwargs)
 
-    import inspect
-
     @staticmethod
     def _rebuild_args_dict(func: Callable[...,
     Any],
@@ -204,10 +202,6 @@ class LoggableObject(metaclass=SetBrowserFunctionAttributeMeta):
         """
         sig = inspect.signature(func)
         parameters = list(sig.parameters.values())
-
-        # Exclude the first parameter (usually "self" or "cls")
-        if parameters:
-            parameters = parameters[1:]
 
         mapped_args = {}
 
