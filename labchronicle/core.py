@@ -189,6 +189,8 @@ class LoggableObject(metaclass=SetBrowserFunctionAttributeMeta):
         This method fetches the signature of the function and tries to match the provided called arguments and
         keyword arguments to build the true arguments dictionary for the function call.
 
+        Note that we have removed "self" from the called args, so be careful to remove it when it's a class method.
+
         Parameters:
         - func (Callable[..., Any]): The function for which the arguments dictionary needs to be built.
         - called_args (List[Any]): List of arguments with which the function was called.
@@ -204,6 +206,10 @@ class LoggableObject(metaclass=SetBrowserFunctionAttributeMeta):
         parameters = list(sig.parameters.values())
 
         mapped_args = {}
+
+        # Remove "self" from the parameters if it's a class method
+        if parameters[0].name == 'self' or parameters[0].name == 'cls':
+            parameters = parameters[1:]
 
         # First, populate with defaults and arguments provided
         for param in parameters:
