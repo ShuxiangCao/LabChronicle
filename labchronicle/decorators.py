@@ -103,6 +103,8 @@ def _log_and_record(func, args, kwargs, record_details=True):
         if record_details:
             record.record_object(self)
 
+        self.logger.info(f'{record.uuid}:Function {func.__qualname__} recorded.')
+
     return retval
 
 
