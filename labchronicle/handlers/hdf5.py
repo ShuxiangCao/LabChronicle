@@ -91,7 +91,7 @@ class RecordHandlerHDF5(RecordHandlersBase):
             record = np.void(pickled_record)
 
         with self._open_file('a') as f:
-            f.create_dataset(record_path, data=record)
+            f.create_dataset(record_path, data=record, compression="gzip", compression_opts=9)
 
     def get_record_by_path(self, record_path: Union[pathlib.Path, str]):
         """
