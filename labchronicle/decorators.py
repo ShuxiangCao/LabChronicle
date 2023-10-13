@@ -96,10 +96,6 @@ def _log_and_record(func, args, kwargs, record_details=True):
 
         record.record_return_values(retval)
 
-        # Take a snapshot of the object after finish the function execution.
-        if record_details:
-            record.record_object(self)
-
         # Could be too detailed. Comment out for now.
         # self.logger.info(f'{record.record_id}: {func.__qualname__} recorded.')
 
@@ -114,6 +110,11 @@ def _log_and_record(func, args, kwargs, record_details=True):
         self.register_log_and_record_args(
             func, args[1:], kwargs, record_details=record_details
         )
+
+        # Take a snapshot of the object after finish the function execution.
+        if record_details:
+            record.record_object(self)
+
 
     return retval
 

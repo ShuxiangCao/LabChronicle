@@ -89,6 +89,7 @@ def test_run_logs_and_read_logs(tmp_path):
                              record_id=str(record_details['record_id']))
 
     assert loaded_obj.ai == 1
+    assert loaded_obj.retrieve_args(func=loaded_obj.sample_method_1) == {'a': 1, 'b': 2, 'c': 3}
 
     # Test using record book to load record
     record_book = chronicle.open_record_book(path)
