@@ -258,8 +258,8 @@ class Chronicle(Singleton):
 
         return record
 
-    def load_all_attributes(self, record_book_path: Union[pathlib.Path, str], record_id: str = None,
-                            record_entry_path: Union[pathlib.Path, str] = None):
+    def load_attributes(self, record_book_path: Union[pathlib.Path, str], record_id: str = None,
+                        record_entry_path: Union[pathlib.Path, str] = None):
         """
         A shortcut for loading all the attributes of a record entry.
         Note that record_id and record_entry_path cannot be both None.
@@ -294,3 +294,37 @@ class Chronicle(Singleton):
         )
 
         return record.get_object()
+
+
+def load_object(record_book_path: Union[pathlib.Path, str], record_id: str = None,
+                record_entry_path: Union[pathlib.Path, str] = None):
+    """
+    A shortcut for loading all the attributes of a record entry.
+    Note that record_id and record_entry_path cannot be both None.
+
+    Parameters:
+        record_book_path (str): The path to the record book.
+        record_id (str): Optional. The id of the record entry.
+        record_entry_path (str): Optional. The path to the record entry.
+
+    Returns (LoggableObject): The logged object.
+    """
+
+    return Chronicle().load_object(record_book_path, record_id, record_entry_path)
+
+
+def load_attributes(record_book_path: Union[pathlib.Path, str], record_id: str = None,
+                    record_entry_path: Union[pathlib.Path, str] = None):
+    """
+    A shortcut for loading all the attributes of a record entry.
+    Note that record_id and record_entry_path cannot be both None.
+
+    Parameters:
+        record_book_path (str): The path to the record book.
+        record_id (str): Optional. The id of the record entry.
+        record_entry_path (str): Optional. The path to the record entry.
+
+
+    Returns (dict): The dictionary of the record entry.
+    """
+    return Chronicle().load_attributes(record_book_path, record_id, record_entry_path)

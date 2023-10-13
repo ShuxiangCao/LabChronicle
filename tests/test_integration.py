@@ -4,7 +4,7 @@ import pathlib
 import pytest
 import numpy as np
 
-from labchronicle import Chronicle, LoggableObject, log_and_record
+from labchronicle import Chronicle, LoggableObject, log_and_record, load_object, load_attributes
 
 
 class MockChronicle(Chronicle):
@@ -73,20 +73,20 @@ def test_run_logs_and_read_logs(tmp_path):
 
     # Test using record details to load record
     record_details = sample_class.retrieve_latest_record_entry_details(sample_class.sample_method_1)
-    attributes = chronicle.load_all_attributes(record_book_path=str(record_details['record_book_path']),
-                                               record_entry_path=str(record_details['record_entry_path']))
+    attributes = load_attributes(record_book_path=str(record_details['record_book_path']),
+                                 record_entry_path=str(record_details['record_entry_path']))
     assert attributes['ai'] == 1
 
-    attributes = chronicle.load_all_attributes(record_book_path=str(record_details['record_book_path']),
-                                               record_id=str(record_details['record_id']))
+    attributes = load_attributes(record_book_path=str(record_details['record_book_path']),
+                                 record_id=str(record_details['record_id']))
     assert attributes['ai'] == 1
 
-    loaded_obj = chronicle.load_object(record_book_path=str(record_details['record_book_path']),
-                                       record_entry_path=str(record_details['record_entry_path']))
+    loaded_obj = load_object(record_book_path=str(record_details['record_book_path']),
+                             record_entry_path=str(record_details['record_entry_path']))
     assert loaded_obj.ai == 1
 
-    loaded_obj = chronicle.load_object(record_book_path=str(record_details['record_book_path']),
-                                       record_id=str(record_details['record_id']))
+    loaded_obj = load_object(record_book_path=str(record_details['record_book_path']),
+                             record_id=str(record_details['record_id']))
 
     assert loaded_obj.ai == 1
 

@@ -1,5 +1,5 @@
 from .logger import setup_logging
-from .chronicle import Chronicle
+from .chronicle import Chronicle, load_object, load_attributes
 from .core import LoggableObject
 from .decorators import log_and_record, log_event, register_browser_function
 
