@@ -103,6 +103,9 @@ def _log_and_record(func, args, kwargs, record_details=True):
         if record_details:
             record.record_object(self)
 
+        # Set an attribute to the object to indicate the latest record id.
+        func.labchronicle_latest_record_id = record.record_id
+
         # Could be too detailed. Comment out for now.
         # self.logger.info(f'{record.record_id}: {func.__qualname__} recorded.')
 
