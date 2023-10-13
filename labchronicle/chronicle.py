@@ -231,3 +231,66 @@ class Chronicle(Singleton):
             bool: True if an active record is recording, otherwise false.
         """
         return self._active_record_book is not None
+
+    def _get_record_by_path_or_id(self, record_book_path: Union[pathlib.Path, str], record_id: str = None,
+                                  record_entry_path: Union[pathlib.Path, str] = None):
+        """
+        A helper function to get the record entry by either the record id or the record entry path.
+        Note that record_id and record_entry_path cannot be both None.
+
+        Parameters:
+            record_book_path (str): The path to the record book.
+            record_id (str): Optional. The id of the record entry.
+            record_entry_path (str): Optional. The path to the record entry.
+
+        Returns (RecordEntry): The record entry.
+        """
+        if record_id is None and record_entry_path is None:
+            msg = "record_id and record_entry_path cannot be both None."
+            logger.error(msg)
+            raise ValueError(msg)
+
+        record_book = self.open_record_book(record_book_path)
+        if record_id is not None:
+            record = record_book.get_record_by_id(record_id)
+        else:
+            record = record_book.get_record_by_path(record_entry_path)
+
+        return record
+
+    def load_all_attributes(self, record_book_path: Union[pathlib.Path, str], record_id: str = None,
+                            record_entry_path: Union[pathlib.Path, str] = None):
+        """
+        A shortcut for loading all the attributes of a record entry.
+        Note that record_id and record_entry_path cannot be both None.
+
+        Parameters:
+            record_book_path (str): The path to the record book.
+            record_id (str): Optional. The id of the record entry.
+            record_entry_path (str): Optional. The path to the record entry.
+
+
+        Returns (dict): The dictionary of the record entry.
+        """
+        record = self._get_record_by_path_or_id(
+            record_book_path, record_id, record_entry_path
+        )
+
+        return record.load_all_attributes()
+
+    def load_object(self, record_book_path: Union[pathlib.Path, str], record_id: str = None,
+                    record_entry_path: Union[pathlib.Path, str] = None):
+        """
+        A shortcut for loading all the attributes of a record entry.
+        Note that record_id and record_entry_path cannot be both None.
+
+        Parameters:
+            record_book_path (str): The path to the record book.
+            record_id (str): Optional. The id of the record entry.
+            record_entry_path (str): Optional. The path to the record entry.
+        """
+        record = self._get_record_by_path_or_id(
+            record_book_path, record_id, record_entry_path
+        )
+
+        return record.get_object()

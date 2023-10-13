@@ -71,6 +71,26 @@ def test_run_logs_and_read_logs(tmp_path):
     path = chronicle._active_record_book.get_path()
     chronicle.end_log()
 
+    # Test using record details to load record
+    record_details = sample_class.retrieve_latest_record_entry_details(sample_class.sample_method_1)
+    attributes = chronicle.load_all_attributes(record_book_path=str(record_details['record_book_path']),
+                                               record_entry_path=str(record_details['record_entry_path']))
+    assert attributes['ai'] == 1
+
+    attributes = chronicle.load_all_attributes(record_book_path=str(record_details['record_book_path']),
+                                               record_id=str(record_details['record_id']))
+    assert attributes['ai'] == 1
+
+    loaded_obj = chronicle.load_object(record_book_path=str(record_details['record_book_path']),
+                                       record_entry_path=str(record_details['record_entry_path']))
+    assert loaded_obj.ai == 1
+
+    loaded_obj = chronicle.load_object(record_book_path=str(record_details['record_book_path']),
+                                       record_id=str(record_details['record_id']))
+
+    assert loaded_obj.ai == 1
+
+    # Test using record book to load record
     record_book = chronicle.open_record_book(path)
 
     root_entry = record_book.get_root_entry()
