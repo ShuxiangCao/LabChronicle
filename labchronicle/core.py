@@ -20,12 +20,12 @@ import json
 logger = setup_logging(__name__)
 
 _reserved_keys = [
-    '_loggable',
-    '_register_log_and_record_args_map',
-    'logger',
-    '_record_entry',
-    '_browse_functions',
-    '__dict__'
+    "_loggable",
+    "_register_log_and_record_args_map",
+    "logger",
+    "_record_entry",
+    "_browse_functions",
+    "__dict__",
 ]
 
 
@@ -68,7 +68,7 @@ class LoggableObject(metaclass=SetBrowserFunctionAttributeMeta):
         Returns:
             str: The human readable id of the loggable object.
         """
-        return self.__class__.__qualname__ + '@' + str(id(self))
+        return self.__class__.__qualname__ + "@" + str(id(self))
 
     def __setattr__(self, key, value):
         """
@@ -84,7 +84,7 @@ class LoggableObject(metaclass=SetBrowserFunctionAttributeMeta):
             super().__setattr__(key, value)
             return
 
-        if '_record_entry' not in self.__dict__ or self._record_entry is None:
+        if "_record_entry" not in self.__dict__ or self._record_entry is None:
             # If the record entry is not in the dict, it means that the object
             # is not being monitored.
             super().__setattr__(key, value)
@@ -101,7 +101,7 @@ class LoggableObject(metaclass=SetBrowserFunctionAttributeMeta):
             str: The representation of the loggable object.
         """
 
-        return f'<{self.hrid}>'
+        return f"<{self.hrid}>"
 
     def __getattribute__(self, key):
         """
@@ -109,7 +109,8 @@ class LoggableObject(metaclass=SetBrowserFunctionAttributeMeta):
         """
 
         # Make sure we use the original __getattribute__ method, to avoid infinite recursion
-        #  that may be induced by the child class overriding the __getattribute__ method.
+        # that may be induced by the child class overriding the
+        # __getattribute__ method.
         get_attribute = super().__getattribute__
 
         result = get_attribute(key)
@@ -117,7 +118,10 @@ class LoggableObject(metaclass=SetBrowserFunctionAttributeMeta):
         if key in _reserved_keys:
             return result
 
-        if '_record_entry' not in get_attribute('__dict__') or get_attribute('_record_entry') is None:
+        if (
+            "_record_entry" not in get_attribute("__dict__")
+            or get_attribute("_record_entry") is None
+        ):
             # If the record entry is not in the dict, it means that the object
             # is not being monitored.
             return result
@@ -125,7 +129,7 @@ class LoggableObject(metaclass=SetBrowserFunctionAttributeMeta):
         if inspect.isroutine(result):
             return result
 
-        get_attribute('_record_entry').touch_attribute(key)
+        get_attribute("_record_entry").touch_attribute(key)
 
         return result
 
@@ -149,14 +153,16 @@ class LoggableObject(metaclass=SetBrowserFunctionAttributeMeta):
         Returns:
             list: The browser functions of the loggable object.
         """
-        return find_methods_with_tag(self, '_browser_function')
+        return find_methods_with_tag(self, "_browser_function")
 
     def register_log_and_record_args(
-            self,
-            func: callable,
-            args: list,
-            kwargs: dict,
-            deepcopy: bool = True):
+        self,
+        func: callable,
+        args: list,
+        kwargs: dict,
+        record_details: dict,
+        deepcopy: bool = True,
+    ):
         """
         Register the arguments of the function.
 
@@ -164,6 +170,7 @@ class LoggableObject(metaclass=SetBrowserFunctionAttributeMeta):
             func (function): The function to register the arguments from.
             args (list): The arguments of the function.
             kwargs (dict): The keyword arguments of the function.
+            record_details (dict): The latest record entry details of the function call.
             deepcopy (bool): Whether to deepcopy the arguments.
 
         Returns:
@@ -174,15 +181,15 @@ class LoggableObject(metaclass=SetBrowserFunctionAttributeMeta):
             kwargs = self._safe_deepcopy(kwargs)
 
         self._register_log_and_record_args_map[func.__qualname__] = (
-            args, kwargs)
+            args,
+            kwargs,
+            record_details,
+        )
 
     @staticmethod
-    def _rebuild_args_dict(func: Callable[...,
-    Any],
-                           called_args: List[Any],
-                           called_kwargs: Dict[str,
-                           Any]) -> Dict[str,
-    Any]:
+    def _rebuild_args_dict(
+        func: Callable[..., Any], called_args: List[Any], called_kwargs: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """
         Reconstruct the arguments dictionary for a given function based on its signature and the called arguments.
 
@@ -208,7 +215,7 @@ class LoggableObject(metaclass=SetBrowserFunctionAttributeMeta):
         mapped_args = {}
 
         # Remove "self" from the parameters if it's a class method
-        if parameters[0].name == 'self' or parameters[0].name == 'cls':
+        if parameters[0].name == "self" or parameters[0].name == "cls":
             parameters = parameters[1:]
 
         # First, populate with defaults and arguments provided
@@ -227,8 +234,10 @@ class LoggableObject(metaclass=SetBrowserFunctionAttributeMeta):
 
         return mapped_args
 
-    def retrieve_args(self, func: callable,
-                      ):
+    def retrieve_args(
+        self,
+        func: callable,
+    ):
         """
         Retrieve the arguments of the function.
 
@@ -240,7 +249,7 @@ class LoggableObject(metaclass=SetBrowserFunctionAttributeMeta):
         """
 
         if func.__qualname__ not in self._register_log_and_record_args_map:
-            msg = f'Function {func.__qualname__} is not registered in {self.hrid}. '
+            msg = f"Function {func.__qualname__} is not registered in {self.hrid}. "
             self.logger.error(msg)
             raise ValueError(msg)
 
@@ -248,7 +257,24 @@ class LoggableObject(metaclass=SetBrowserFunctionAttributeMeta):
 
         return self._rebuild_args_dict(func, val[0], val[1])
 
-    def set_record_entry(self, record_entry: Optional['RecordEntry'] = None):
+    def retrieve_latest_record_entry_details(self, func: callable):
+        """
+        Retrieve the latest record entry details of the function call.
+
+        Parameters:
+            func (function): The function to retrieve the arguments from.
+
+        Returns:
+            dict: The latest record entry details of the function call.
+        """
+        if func.__qualname__ not in self._register_log_and_record_args_map:
+            msg = f"Function {func.__qualname__} is not registered in {self.hrid}. "
+            self.logger.error(msg)
+            raise ValueError(msg)
+
+        return self._register_log_and_record_args_map[func.__qualname__][2]
+
+    def set_record_entry(self, record_entry: Optional["RecordEntry"] = None):
         """
         Set the record entry of the loggable object. When record entry is set, the loggable object will start to
         record the attributes to the record entry.
@@ -276,30 +302,30 @@ class RecordBook(object):
 
         self._config = config
         self._handler: RecordHandlersBase = get_handler(
-            config['handler'])(config)
+            config["handler"])(config)
         self._enable_write = enable_write
 
         if not enable_write:
             # If it is read only, load the record book.
             self._handler.load_record_book()
-            system_info_json = self._handler.get_record_by_path('system_info')
+            system_info_json = self._handler.get_record_by_path("system_info")
             self._system_info = json.loads(system_info_json)
         else:
             # If it is a new record book, initialize it.
             self._handler.init_new_record_book()
             self._system_info = get_system_info()
             system_info_json = json.dumps(self._system_info)
-            self._handler.add_record('system_info', system_info_json)
+            self._handler.add_record("system_info", system_info_json)
 
         self._root_entry = RecordEntry(
             record_book=self,
             timestamp=0,
-            record_id='root',
+            record_id="root",
             record_order=0,
-            base_path='/',
+            base_path="/",
         )
 
-        self._root_entry.set_name('root')
+        self._root_entry.set_name("root")
 
     def get_path(self):
         """
@@ -308,11 +334,11 @@ class RecordBook(object):
         Returns:
             pathlib.Path: The path of the record book.
         """
-        return pathlib.Path(self._config['log_path'])
+        return pathlib.Path(self._config["log_path"])
 
     def get_record_by_path(self,
                            path: Union[pathlib.Path,
-                           str]) -> 'RecordEntry':
+                                       str]) -> "RecordEntry":
         """
         Get a record by its path.
 
@@ -338,7 +364,7 @@ class RecordBook(object):
         Returns:
             Any: The record.
         """
-        path = self._handler.get_record_by_path(f'/uuid/{str(record_id)}')
+        path = self._handler.get_record_by_path(f"/uuid/{str(record_id)}")
         return self.get_record_by_path(path)
 
     def get_available_record_ids(self):
@@ -348,7 +374,7 @@ class RecordBook(object):
         Returns:
             list: The available record ids.
         """
-        return self._handler.list_records('/uuid')
+        return self._handler.list_records("/uuid")
 
     @property
     def handler(self):
@@ -376,7 +402,7 @@ class RecordBook(object):
         Returns:
             int: The start time of the record book.
         """
-        return int(self._system_info['start_time'])
+        return int(self._system_info["start_time"])
 
 
 class RecordEntry(object):
@@ -388,14 +414,15 @@ class RecordEntry(object):
 
     """
 
-    def __init__(self,
-                 record_book: RecordBook,
-                 timestamp: Optional[int] = None,
-                 record_id: Optional[str] = None,
-                 record_order: Optional[int] = None,
-                 base_path: Optional[pathlib.Path] = None,
-                 full_path: Optional[pathlib.Path] = None
-                 ):
+    def __init__(
+        self,
+        record_book: RecordBook,
+        timestamp: Optional[int] = None,
+        record_id: Optional[str] = None,
+        record_order: Optional[int] = None,
+        base_path: Optional[pathlib.Path] = None,
+        full_path: Optional[pathlib.Path] = None,
+    ):
         """
         Initialize the RecordEntry class.
 
@@ -414,7 +441,12 @@ class RecordEntry(object):
         self._base_path = base_path
         self._touched_attributes = []
 
-        if timestamp is None or record_id is None or record_order is None or base_path is None:
+        if (
+            timestamp is None
+            or record_id is None
+            or record_order is None
+            or base_path is None
+        ):
             # If the record entry is not initiated, it means that it is loading
             # a record entry.
             assert full_path is not None
@@ -430,22 +462,42 @@ class RecordEntry(object):
             path (pathlib.Path): The path to the record entry.
         """
 
-        if path == pathlib.Path('/root'):
-            self._record_order, self._name = 0, 'root'
-            self._base_path = '/root'
+        if path == pathlib.Path("/root"):
+            self._record_order, self._name = 0, "root"
+            self._base_path = "/root"
             return
 
         path_name = path.name
-        splits = path_name.split('-', 1)
+        splits = path_name.split("-", 1)
 
         if len(splits) != 2:
-            msg = f'Invalid path {path}.'
+            msg = f"Invalid path {path}."
             logger.error(msg)
             raise ValueError(msg)
 
         self._record_order, self._name = int(splits[0]), splits[1]
         self._base_path = path.parent
         self._load_metadata()
+
+    @property
+    def record_book(self):
+        """
+        Get the record book that the record entry belongs to.
+
+        Returns:
+            RecordBook: The record book of the record entry.
+        """
+        return self._record_book
+
+    @property
+    def record_time(self):
+        """
+        Get the record time of the record entry.
+
+        Returns:
+            int: The record time of the record entry.
+        """
+        return self._timestamp + self._record_book.get_start_time()
 
     def _check_initiated(self):
         """
@@ -456,12 +508,12 @@ class RecordEntry(object):
         """
 
         if self._name is None:
-            msg = 'Please set the name of the record entry first.'
+            msg = "Please set the name of the record entry first."
             logger.error(msg)
             raise ValueError(msg)
 
         if self._record_book.handler is None:
-            msg = 'Please initialize the record book first.'
+            msg = "Please initialize the record book first."
             logger.error(msg)
             raise ValueError(msg)
 
@@ -473,12 +525,12 @@ class RecordEntry(object):
             pathlib.Path: The path of the record entry.
         """
 
-        if self._name == 'root':
-            return pathlib.Path('/root')
+        if self._name == "root":
+            return pathlib.Path("/root")
 
         self._check_initiated()
 
-        return self._base_path / (str(self._record_order) + '-' + self._name)
+        return self._base_path / (str(self._record_order) + "-" + self._name)
 
     def _get_attribute_path(self, key: str):
         """
@@ -525,8 +577,8 @@ class RecordEntry(object):
             self.save_attribute(attr, getattr(obj, attr))
 
         # Save the object itself
-        self.save_attribute('__object__', obj)
-        self.save_attribute('__touched_attributes__', self._touched_attributes)
+        self.save_attribute("__object__", obj)
+        self.save_attribute("__touched_attributes__", self._touched_attributes)
 
     def record_return_values(self, return_values: Any):
         """
@@ -535,7 +587,7 @@ class RecordEntry(object):
         Parameters:
             return_values (Any): The return values of the function.
         """
-        self.save_attribute('__return_values__', return_values)
+        self.save_attribute("__return_values__", return_values)
 
     def load_return_values(self):
         """
@@ -544,7 +596,7 @@ class RecordEntry(object):
         Returns:
             Any: The return values of the function.
         """
-        return self.load_attribute('__return_values__')
+        return self.load_attribute("__return_values__")
 
     def record_args(self, args: list, kwargs: dict):
         """
@@ -554,26 +606,26 @@ class RecordEntry(object):
             args (list): The arguments of the function.
             kwargs (dict): The keyword arguments of the function.
         """
-        self.save_attribute('__args__', args)
-        self.save_attribute('__kwargs__', kwargs)
+        self.save_attribute("__args__", args)
+        self.save_attribute("__kwargs__", kwargs)
 
     def record_metadata(self):
         """
         Record the metadata of the record entry.
         """
-        self.save_attribute('__timestamp__', self._timestamp)
-        self.save_attribute('__record_id__', self._record_id)
-        self.save_attribute('__name__', self._name)
+        self.save_attribute("__timestamp__", self._timestamp)
+        self.save_attribute("__record_id__", self._record_id)
+        self.save_attribute("__name__", self._name)
 
     def _load_metadata(self):
         """
         Load the metadata of the record entry.
         """
-        self._timestamp = self.load_attribute('__timestamp__')
-        self._record_id = self.load_attribute('__record_id__')
-        self._name = self.load_attribute('__name__')
+        self._timestamp = self.load_attribute("__timestamp__")
+        self._record_id = self.load_attribute("__record_id__")
+        self._name = self.load_attribute("__name__")
         self._touched_attributes = self.load_attribute(
-            '__touched_attributes__')
+            "__touched_attributes__")
 
     def get_object(self):
         """
@@ -582,7 +634,7 @@ class RecordEntry(object):
         Returns:
             LoggableObject: The loggable object.
         """
-        return self.load_attribute('__object__')
+        return self.load_attribute("__object__")
 
     def get_attribute(self, key: str):
         """
@@ -594,7 +646,9 @@ class RecordEntry(object):
         Returns:
             Any: The value of the attribute.
         """
-        assert key in self._touched_attributes, f'Attribute {key} is not recorded. Please try access through the object.'
+        assert (
+            key in self._touched_attributes
+        ), f"Attribute {key} is not recorded. Please try access through the object."
         return self.load_attribute(key)
 
     def get_recorded_attribute_names(self):
@@ -614,8 +668,8 @@ class RecordEntry(object):
             tuple: The arguments of the function.
         """
 
-        args = self.load_attribute('__args__')
-        kwargs = self.load_attribute('__kwargs__')
+        args = self.load_attribute("__args__")
+        kwargs = self.load_attribute("__kwargs__")
 
         return args, kwargs
 
@@ -679,7 +733,7 @@ class RecordEntry(object):
         # TODO: this search is not efficient, may significantly slow down when a same routine get repeatedly executed,
         #  should be improved.
         children_names = [
-            name for name in list_of_names if name[0] in '0123456789']
+            name for name in list_of_names if name[0] in "0123456789"]
 
         return children_names
 
@@ -695,10 +749,9 @@ class RecordEntry(object):
         children_names = self._get_children_names()
 
         return [
-            RecordEntry(
-                record_book=self._record_book,
-                full_path=self.get_path() /
-                          name) for name in children_names]
+            RecordEntry(record_book=self._record_book, full_path=self.get_path() / name)
+            for name in children_names
+        ]
 
     @property
     def parent(self):
@@ -709,8 +762,8 @@ class RecordEntry(object):
             RecordEntry: The parent of the record entry.
         """
         return RecordEntry(
-            record_book=self._record_book,
-            full_path=self.get_path().parent)
+            record_book=self._record_book, full_path=self.get_path().parent
+        )
 
     @property
     def record_id(self):

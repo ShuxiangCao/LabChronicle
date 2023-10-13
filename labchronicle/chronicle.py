@@ -18,6 +18,7 @@ class Singleton(object):
     """
     The singleton class is used to make sure that there is only one instance of the Chronicle class.
     """
+
     _instance = None
 
     def __new__(cls, *args, **kwargs):
@@ -81,7 +82,7 @@ class Chronicle(Singleton):
 
         # Load the configuration from the file
         if config_path is not None:
-            with open(config_path, 'r') as f:
+            with open(config_path, "r") as f:
                 config = yaml.load(f, Loader=yaml.FullLoader)
 
             self._validate_config(config)
@@ -90,16 +91,16 @@ class Chronicle(Singleton):
             config = {}
 
         # Load the configuration from environment variables
-        if 'LAB_CHRONICLE_LOG_DIR' in os.environ and 'log_path' not in config:
-            config['log_path'] = os.environ['LAB_CHRONICLE_LOG_DIR']
-        if 'LAB_CHRONICLE_HANDLER' in os.environ and 'handlers' not in config:
-            config['handler'] = os.environ['LAB_CHRONICLE_HANDLER']
+        if "LAB_CHRONICLE_LOG_DIR" in os.environ and "log_path" not in config:
+            config["log_path"] = os.environ["LAB_CHRONICLE_LOG_DIR"]
+        if "LAB_CHRONICLE_HANDLER" in os.environ and "handlers" not in config:
+            config["handler"] = os.environ["LAB_CHRONICLE_HANDLER"]
 
         # Load the default configuration
-        if 'log_path' not in config:
-            config['log_path'] = './log'
-        if 'handler' not in config:
-            config['handler'] = 'hdf5'
+        if "log_path" not in config:
+            config["log_path"] = "./log"
+        if "handler" not in config:
+            config["handler"] = "hdf5"
 
         # Validate the configuration
         self._validate_config(config)
@@ -117,16 +118,17 @@ class Chronicle(Singleton):
 
         if not isinstance(config, dict):
             raise ValueError(
-                'Invalid configuration file. Expected a dictionary, got a {type(config)} instead.')
+                "Invalid configuration file. Expected a dictionary, got a {type(config)} instead."
+            )
 
-        if 'log_path' not in config:
+        if "log_path" not in config:
             raise ValueError(
-                'log_path is not specified in the configuration file. Please specify the'
-                ' LAB_CHRONICLE_LOG_DIR environment variable.')
-        if 'handler' not in config:
+                "log_path is not specified in the configuration file. Please specify the"
+                " LAB_CHRONICLE_LOG_DIR environment variable.")
+        if "handler" not in config:
             raise ValueError(
-                'handlers is not specified in the configuration file. Please specify the'
-                ' LAB_CHRONICLE_HANDLER environment variable.')
+                "handlers is not specified in the configuration file. Please specify the"
+                " LAB_CHRONICLE_HANDLER environment variable.")
 
     def start_log(self, name: str = None):
         """
@@ -139,16 +141,19 @@ class Chronicle(Singleton):
         if name is None:
             name = ""
 
-        path = get_log_path(pathlib.Path(self._config['log_path']), name=name)
+        path = get_log_path(pathlib.Path(self._config["log_path"]), name=name)
 
         record_book_config = copy.deepcopy(self._config)
-        record_book_config['log_path'] = path.as_posix()
+        record_book_config["log_path"] = path.as_posix()
 
         self._active_record_book = RecordBook(
-            enable_write=True, config=record_book_config)
+            enable_write=True, config=record_book_config
+        )
         self._record_tracking_stack = [
             self._active_record_book.get_root_entry()]
         self._log_start_time = self._active_record_book.get_start_time()
+
+        logger.info(f"Log started at {path}")
 
     @contextmanager
     def new_record(self):
@@ -157,29 +162,32 @@ class Chronicle(Singleton):
         """
 
         if self._record_tracking_stack is None:
-            logger.warning('No active log. Execution not recorded.')
+            logger.warning("No active log. Execution not recorded.")
             try:
                 yield None
             finally:
                 pass
             return
 
-        record_timestamp = int(
-            datetime.datetime.now().timestamp()) - self._log_start_time
+        record_timestamp = (
+            int(datetime.datetime.now().timestamp()) - self._log_start_time
+        )
 
         if len(self._record_tracking_stack) == 0:
-            msg = 'Log records compromised.'
+            msg = "Log records compromised."
             logger.error(msg)
             raise ValueError(msg)
         else:
             record_order = self._record_tracking_stack[-1].get_children_number()
             record_path = self._record_tracking_stack[-1].get_path()
 
-        new_record = RecordEntry(timestamp=record_timestamp,
-                                 record_id=str(uuid.uuid4()),
-                                 record_book=self._active_record_book,
-                                 record_order=record_order,
-                                 base_path=record_path)
+        new_record = RecordEntry(
+            timestamp=record_timestamp,
+            record_id=str(uuid.uuid4()),
+            record_book=self._active_record_book,
+            record_order=record_order,
+            base_path=record_path,
+        )
 
         self._record_tracking_stack.append(new_record)
 
@@ -190,7 +198,8 @@ class Chronicle(Singleton):
 
             # Write the link of uuid to the path
             self._active_record_book.handler.add_record(
-                f'/uuid/{last_record.record_id}', str(last_record.get_path()))
+                f"/uuid/{last_record.record_id}", str(last_record.get_path())
+            )
 
     def end_log(self):
         """
@@ -208,10 +217,9 @@ class Chronicle(Singleton):
             path (str): Optional. The path to the record book. If not specified, use the default path.
         """
         if path is None:
-            path = self._config['log_path']
+            path = self._config["log_path"]
 
         record_book_config = copy.deepcopy(self._config)
-        record_book_config['log_path'] = path
+        record_book_config["log_path"] = path
 
-        return RecordBook(
-            enable_write=False, config=record_book_config)
+        return RecordBook(enable_write=False, config=record_book_config)

@@ -16,6 +16,7 @@ def mock_record_book():
     mock_book.handler.add_record = MagicMock()
     mock_book.handler.get_record_by_path = MagicMock()
     mock_book.handler.list_records = MagicMock(return_value=[])
+    mock_book.get_start_time = MagicMock(return_value=1)
     return mock_book
 
 
@@ -32,6 +33,8 @@ def sample_record_entry(mock_record_book):
 
 def test_record_entry_initialization(sample_record_entry):
     assert sample_record_entry.timestamp == 1234567890
+    assert isinstance(sample_record_entry.record_id, uuid.UUID)
+    assert sample_record_entry.record_time == 1234567891
 
 
 def test_get_path(sample_record_entry):

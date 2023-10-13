@@ -24,16 +24,16 @@ class RecordHandlerHDF5(RecordHandlersBase):
     @contextmanager
     def _open_file(self, mode: str):
         """
-            Open the HDF5 file. Use `with` statement with this function to operate hdf5 files.
+        Open the HDF5 file. Use `with` statement with this function to operate hdf5 files.
 
-            Parameters:
-                mode (str): The mode to open the file.
+        Parameters:
+            mode (str): The mode to open the file.
 
-            Returns:
-                file: The HDF5 file object.
+        Returns:
+            file: The HDF5 file object.
         """
 
-        path = self._config['log_path']
+        path = self._config["log_path"]
 
         if isinstance(path, str):
             path = pathlib.Path(path)
@@ -51,8 +51,8 @@ class RecordHandlerHDF5(RecordHandlersBase):
         """
         Initialize a new record book.
         """
-        with self._open_file('w') as f:
-            f.create_group('root')
+        with self._open_file("w") as f:
+            f.create_group("root")
             pass
         self._initiated = True
 
@@ -60,7 +60,7 @@ class RecordHandlerHDF5(RecordHandlersBase):
         """
         Load an existing record book.
         """
-        with self._open_file('r'):
+        with self._open_file("r"):
             pass
         self._initiated = True
 
@@ -90,7 +90,7 @@ class RecordHandlerHDF5(RecordHandlersBase):
             pickled_record = pickle.dumps(record)
             record = np.void(pickled_record)
 
-        with self._open_file('a') as f:
+        with self._open_file("a") as f:
             f.create_dataset(record_path, data=record)
 
     def get_record_by_path(self, record_path: Union[pathlib.Path, str]):
@@ -108,7 +108,7 @@ class RecordHandlerHDF5(RecordHandlersBase):
         if isinstance(record_path, pathlib.Path):
             record_path = record_path.as_posix()
 
-        with self._open_file('r') as f:
+        with self._open_file("r") as f:
             return f[record_path][()]
 
     def list_records(self, record_path: Union[pathlib.Path, str]) -> list:
@@ -126,5 +126,5 @@ class RecordHandlerHDF5(RecordHandlersBase):
         if isinstance(record_path, pathlib.Path):
             record_path = record_path.as_posix()
 
-        with self._open_file('r') as f:
+        with self._open_file("r") as f:
             return list(f[record_path].keys())

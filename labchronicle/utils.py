@@ -26,7 +26,7 @@ def get_system_info():
         "python_implementation": platform.python_implementation(),
         "python_revision": platform.python_revision(),
         "python_version_tuple": platform.python_version_tuple(),
-        "uname": platform.uname()
+        "uname": platform.uname(),
     }
 
     jupyter_user = os.environ.get("JUPYTERHUB_USER", getpass.getuser())
@@ -35,7 +35,7 @@ def get_system_info():
         "platform_info": platform_info,
         "environ": {os.environ[k]: k for k in os.environ.keys()},
         "start_time": datetime.datetime.now().timestamp(),
-        "user": jupyter_user
+        "user": jupyter_user,
     }
 
     return info
@@ -77,7 +77,8 @@ def find_methods_with_tag(instance: object, tag_name: str) -> list:
         tagged_methods (list): A list of tuples of the method name and the method.
     """
     tagged_methods = []
-    for name, method in inspect.getmembers(instance, predicate=inspect.ismethod):
+    for name, method in inspect.getmembers(
+            instance, predicate=inspect.ismethod):
         if getattr(method, tag_name, None):
             tagged_methods.append((name, method))
     return tagged_methods

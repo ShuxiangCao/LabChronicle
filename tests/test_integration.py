@@ -27,7 +27,7 @@ class SampleClass(LoggableObject):
         }
         self.data = np.arange(10)
 
-    @log_and_record
+    @log_and_record()
     def sample_method_1(self, a, b, c=1):
         self.data = np.arange(20)
         self.ai = a
@@ -35,7 +35,7 @@ class SampleClass(LoggableObject):
         self.ci = c
         return 'abc'
 
-    @log_and_record
+    @log_and_record()
     def sample_method_2(self, d, e, f=1):
         self.data = np.arange(30)
         return 123

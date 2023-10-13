@@ -27,9 +27,10 @@ class TestLoggableObject:
 
         args = [1, 2]
         kwargs = {'c': 3}
-        log_obj.register_log_and_record_args(SampleClass.sample_function, args, kwargs, deepcopy=False)
+        log_obj.register_log_and_record_args(SampleClass.sample_function, args, kwargs, record_details={},
+                                             deepcopy=False)
 
-        assert log_obj._register_log_and_record_args_map['SampleClass.sample_function'] == (args, kwargs)
+        assert log_obj._register_log_and_record_args_map['SampleClass.sample_function'] == (args, kwargs, {})
 
     def test_register_log_and_record_args_with_deepcopy(self):
         log_obj = LoggableObject()
@@ -39,15 +40,17 @@ class TestLoggableObject:
         kwargs = {'c': [4, 5]}
         original_kwargs = copy.deepcopy(kwargs)
 
-        log_obj.register_log_and_record_args(SampleClass.sample_function, args, kwargs)
+        log_obj.register_log_and_record_args(SampleClass.sample_function, args, kwargs, record_details={'g': 1})
 
         args[0].append(10)
         kwargs['c'].append(10)
 
         # Ensure original values are stored
-        assert log_obj._register_log_and_record_args_map['SampleClass.sample_function'] != (args, kwargs)
+        assert log_obj._register_log_and_record_args_map['SampleClass.sample_function'] != (args, kwargs, {'g': 1})
         assert log_obj._register_log_and_record_args_map['SampleClass.sample_function'] == (
-            original_args, original_kwargs)
+            original_args, original_kwargs, {'g': 1})
+
+        assert log_obj.retrieve_latest_record_entry_details(SampleClass.sample_function) == {'g': 1}
 
     def test_rebuild_args_dict(self):
         log_obj = LoggableObject()
@@ -66,7 +69,7 @@ class TestLoggableObject:
 
         args = [1, 2]
         kwargs = {'c': 3}
-        log_obj.register_log_and_record_args(SampleClass.sample_function, args, kwargs)
+        log_obj.register_log_and_record_args(SampleClass.sample_function, args, kwargs, record_details={})
 
         retrieved_args = log_obj.retrieve_args(SampleClass.sample_function)
 
@@ -84,8 +87,8 @@ class TestLoggableObject:
 
         args = [1, 2]
         kwargs = {'c': 3}
-        log_obj.register_log_and_record_args(SampleClass.sample_function, args, kwargs)
-        log_obj.register_log_and_record_args(SampleClass.sample_function, [4, 5], {'c': 6})
+        log_obj.register_log_and_record_args(SampleClass.sample_function, args, kwargs, record_details={})
+        log_obj.register_log_and_record_args(SampleClass.sample_function, [4, 5], {'c': 6}, record_details={})
 
         retrieved_args = log_obj.retrieve_args(SampleClass.sample_function)
 

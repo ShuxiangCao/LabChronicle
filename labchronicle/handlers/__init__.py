@@ -4,9 +4,7 @@ from .handlers import RecordHandlersBase
 
 logger = setup_logging(__name__)
 
-available_handlers = {
-    'hdf5': RecordHandlerHDF5
-}
+available_handlers = {"hdf5": RecordHandlerHDF5}
 
 
 def get_handler(handler_name: str) -> RecordHandlersBase:
