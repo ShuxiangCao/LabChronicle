@@ -4,6 +4,7 @@ import pytest
 from unittest.mock import MagicMock, patch
 from labchronicle.chronicle import Chronicle
 
+
 class MockChronicle(Chronicle):
     """
     A mock class for testing MockChronicle. Allows killing the singleton instance.
@@ -17,8 +18,11 @@ class MockChronicle(Chronicle):
 def test_start_log_default_name():
     ch = MockChronicle()
 
+    assert ch.is_recording() is False
+
     with patch('labchronicle.chronicle.get_log_path', return_value=pathlib.Path("mocked_path")):
         ch.start_log()
+        assert ch.is_recording() is True
 
     assert ch._active_record_book is not None
     assert ch._record_tracking_stack is not None
@@ -49,6 +53,7 @@ def test_new_record_no_active_log(caplog):
 
     ch.kill_singleton()
 
+
 def test_new_record_with_active_log():
     ch = MockChronicle()
 
@@ -63,6 +68,7 @@ def test_new_record_with_active_log():
         assert ch._active_record_book.handler.add_record.called
 
     ch.kill_singleton()
+
 
 def test_new_record_log_records_compromised(caplog):
     ch = MockChronicle()

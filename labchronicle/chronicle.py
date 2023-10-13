@@ -170,7 +170,7 @@ class Chronicle(Singleton):
             return
 
         record_timestamp = (
-            int(datetime.datetime.now().timestamp()) - self._log_start_time
+                int(datetime.datetime.now().timestamp()) - self._log_start_time
         )
 
         if len(self._record_tracking_stack) == 0:
@@ -223,3 +223,11 @@ class Chronicle(Singleton):
         record_book_config["log_path"] = path
 
         return RecordBook(enable_write=False, config=record_book_config)
+
+    def is_recording(self) -> bool:
+        """
+        Return if currently an active record book is recording.
+        Returns
+            bool: True if an active record is recording, otherwise false.
+        """
+        return self._active_record_book is not None
