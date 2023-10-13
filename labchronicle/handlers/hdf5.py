@@ -3,6 +3,7 @@ from typing import Any, Union
 import h5py
 from contextlib import contextmanager
 import pathlib
+import numbers
 
 import numpy as np
 
@@ -75,23 +76,34 @@ class RecordHandlerHDF5(RecordHandlersBase):
 
         self._check_initiated()
 
+        extra_options = {}
+
         if isinstance(record_path, pathlib.Path):
             record_path = record_path.as_posix()
 
         # Check the data type
         if isinstance(record, np.ndarray):
-            # Save numpy directly
-            pass
+            # Save numpy directly, with compression
+            extra_options.update({
+                "compression": "gzip", "compression_opts": 9
+            })
         elif isinstance(record, str):
             # Save string directly
+            pass
+        elif isinstance(record, numbers.Number):
+            # Save number directly
             pass
         else:
             # Pickle and convert to np.void
             pickled_record = pickle.dumps(record)
             record = np.void(pickled_record)
+            if len(record) > 10:  # Data too short does not worth compression.
+                extra_options.update({
+                    "compression": "gzip", "compression_opts": 9
+                })
 
-        with self._open_file("a") as f:
-            f.create_dataset(record_path, data=record)
+        with self._open_file('a') as f:
+            f.create_dataset(record_path, data=record, **extra_options)
 
     def get_record_by_path(self, record_path: Union[pathlib.Path, str]):
         """
