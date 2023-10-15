@@ -589,6 +589,15 @@ class RecordEntry(object):
         """
         self.save_attribute("__return_values__", return_values)
 
+    def record_error_info(self, error_info: Any):
+        """
+        Record the error info of the function.
+
+        Parameters:
+            error_info (Any): The error info of the function.
+        """
+        self.save_attribute("__error_info__", error_info)
+
     def load_return_values(self):
         """
         Load the return values of the function.

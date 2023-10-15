@@ -89,7 +89,14 @@ def _log_and_record(func, args, kwargs, record_details=True):
 
         if record_details:
             self.set_record_entry(record)
-        retval = func(*args, **kwargs)
+
+        try:
+            retval = func(*args, **kwargs)
+            error_info = None
+        except Exception as e:
+            retval = None
+            error_info = e
+            record.record_error_info(error_info)
 
         if record_details:
             self.set_record_entry()
@@ -115,6 +122,8 @@ def _log_and_record(func, args, kwargs, record_details=True):
         if record_details:
             record.record_object(self)
 
+    if error_info is not None:
+        raise error_info
 
     return retval
 
