@@ -108,9 +108,9 @@ def _log_and_record(func, args, kwargs, record_details=True):
 
         # Set attributes to the object to indicate the latest record details.
         record_details = {
-            "record_id": record.record_id,
-            "record_entry_path": record.get_path(),
-            "record_book_path": record.record_book.get_path(),
+            "record_id": str(record.record_id),
+            "record_entry_path": str(record.get_path()),
+            "record_book_path": str(record.record_book.get_path()),
             "record_time": record.record_time,
         }
 

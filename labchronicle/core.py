@@ -716,7 +716,12 @@ class RecordEntry(object):
             loaded_data = loaded_data.decode()
 
         if isinstance(loaded_data, np.void):
-            loaded_data = pickle.loads(loaded_data.tobytes())
+            try:
+                loaded_data = pickle.loads(loaded_data.tobytes())
+            except Exception as e:
+                msg = f'Pickle loading failed:{e}'
+                loaded_data = None
+                logger.warning(msg)
 
         return loaded_data
 
