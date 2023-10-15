@@ -90,6 +90,18 @@ def _log_and_record(func, args, kwargs, record_details=True):
         if record_details:
             self.set_record_entry(record)
 
+        # Set attributes to the object to indicate the latest record details.
+        record_details = {
+            "record_id": str(record.record_id),
+            "record_entry_path": str(record.get_path()),
+            "record_book_path": str(record.record_book.get_path()),
+            "record_time": record.record_time,
+        }
+
+        self.register_log_and_record_args(
+            func, args[1:], kwargs, record_details=record_details
+        )
+
         try:
             retval = func(*args, **kwargs)
             error_info = None
@@ -105,18 +117,6 @@ def _log_and_record(func, args, kwargs, record_details=True):
 
         # Could be too detailed. Comment out for now.
         # self.logger.info(f'{record.record_id}: {func.__qualname__} recorded.')
-
-        # Set attributes to the object to indicate the latest record details.
-        record_details = {
-            "record_id": str(record.record_id),
-            "record_entry_path": str(record.get_path()),
-            "record_book_path": str(record.record_book.get_path()),
-            "record_time": record.record_time,
-        }
-
-        self.register_log_and_record_args(
-            func, args[1:], kwargs, record_details=record_details
-        )
 
         # Take a snapshot of the object after finish the function execution.
         if record_details:
