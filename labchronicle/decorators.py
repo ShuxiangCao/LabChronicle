@@ -10,7 +10,7 @@ logger = setup_logging(__name__)
 
 
 @decorator.decorator
-def log_and_record(func, *args, **kwargs):
+def log_and_record(func, overwrite_func_name=None, *args, **kwargs):
     """
     Decorator function for the functions that want to be logged. The function must be a method of a LoggableObject.
     Using this decorator will record the object and modified attributes within this function call
@@ -18,33 +18,37 @@ def log_and_record(func, *args, **kwargs):
 
     Parameters:
         func (function): The function to be logged.
+        overwrite_func_name (str): Optional. The name of the function to be recorded. If not specified, the name of
+                                    the function will be used.
         args (list): The arguments of the function.
         kwargs (dict): The keyword arguments of the function.
 
     Returns:
         Any: The return value of the function.
     """
-    return _log_and_record(func, args, kwargs)
+    return _log_and_record(func, args, kwargs, overwrite_func_name=overwrite_func_name)
 
 
 @decorator.decorator
-def log_event(func, *args, **kwargs):
+def log_event(func,overwrite_func_name=None, *args, **kwargs):
     """
     Decorator function for the functions that want to be logged. The function must be a method of a LoggableObject.
     Using this decorator will only record return values and arguments of the function.
 
     Parameters:
         func (function): The function to be logged.
+        overwrite_func_name (str): Optional. The name of the function to be recorded. If not specified, the name of
+                                    the function will be used.
         args (list): The arguments of the function.
         kwargs (dict): The keyword arguments of the function.
 
     Returns:
         Any: The return value of the function.
     """
-    return _log_and_record(func, args, kwargs, record_details=False)
+    return _log_and_record(func, args, kwargs, record_details=False, overwrite_func_name=overwrite_func_name)
 
 
-def _log_and_record(func, args, kwargs, record_details=True):
+def _log_and_record(func, args, kwargs, record_details=True, overwrite_func_name=None):
     """
     Decorator function for the functions that want to be logged. The function must be a method of a LoggableObject.
 
@@ -54,6 +58,8 @@ def _log_and_record(func, args, kwargs, record_details=True):
         kwargs (dict): The keyword arguments of the function.
         record_details (bool): Optional. Whether to record the object and attributes after the function execution.
                                 If false, only the arguments and return values are recorded.
+        overwrite_func_name (str): Optional. The name of the function to be recorded. If not specified, the name of
+                                    the function will be used.
 
     Returns:
         Any: The return value of the function.
@@ -69,7 +75,7 @@ def _log_and_record(func, args, kwargs, record_details=True):
     self = args[0]
 
     if not isinstance(self, LoggableObject):
-        msg = f"Function {func.__qualname__} is not a method of a LoggableObject."
+        msg = f"Function {func.__qualname__} is not a method of a LoggableObject. Object type: {type(self)}."
         logger.error(msg)
         raise RuntimeError(msg)
 
@@ -81,7 +87,13 @@ def _log_and_record(func, args, kwargs, record_details=True):
             return func(*args, **kwargs)
 
         # Finalize the setup of the record.
-        record.set_name(func.__qualname__)
+
+        name = overwrite_func_name if overwrite_func_name is not None else func.__qualname__
+
+        if overwrite_func_name is not None:
+            print(overwrite_func_name)
+            pass
+        record.set_name(name)
         record.record_metadata()
         record.record_args(args[1:], kwargs)
 
@@ -115,7 +127,7 @@ def _log_and_record(func, args, kwargs, record_details=True):
         }
 
         self.register_log_and_record_args(
-            func, args[1:], kwargs, record_details=record_details
+            func, args[1:], kwargs, record_details=record_details, overwrite_func_name=overwrite_func_name
         )
 
         # Take a snapshot of the object after finish the function execution.
