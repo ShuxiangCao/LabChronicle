@@ -162,6 +162,7 @@ class LoggableObject(metaclass=SetBrowserFunctionAttributeMeta):
             kwargs: dict,
             record_details: dict,
             deepcopy: bool = True,
+            overwrite_func_name = None
     ):
         """
         Register the arguments of the function.
@@ -172,6 +173,8 @@ class LoggableObject(metaclass=SetBrowserFunctionAttributeMeta):
             kwargs (dict): The keyword arguments of the function.
             record_details (dict): The latest record entry details of the function call.
             deepcopy (bool): Whether to deepcopy the arguments.
+            overwrite_func_name (str): Optional. The name of the function to be recorded. If not specified, the name of
+                                        the function will be used.
 
         Returns:
             dict: The arguments of the function.
@@ -180,7 +183,9 @@ class LoggableObject(metaclass=SetBrowserFunctionAttributeMeta):
             args = self._safe_deepcopy(args)
             kwargs = self._safe_deepcopy(kwargs)
 
-        self._register_log_and_record_args_map[func.__qualname__] = (
+        name = overwrite_func_name if overwrite_func_name is not None else func.__qualname__
+
+        self._register_log_and_record_args_map[name] = (
             args,
             kwargs,
             record_details,
