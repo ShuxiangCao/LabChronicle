@@ -103,7 +103,7 @@ class RecordHandlerHDF5(RecordHandlersBase):
                 })
 
         with self._open_file('a') as f:
-            f.create_dataset(record_path, data=record, **extra_options)
+            f.create_dataset(record_path, data=record, chunks=not np.isscalar(record), **extra_options)
 
     def get_record_by_path(self, record_path: Union[pathlib.Path, str]):
         """
