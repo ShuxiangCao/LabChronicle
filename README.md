@@ -91,10 +91,19 @@ The `my_function` function is now tracked by LabChronicle. The function can be c
 will be the same as before. However, the function call is now logged, and the values of `a` and `b` are stored in the
 database. The database can be accessed using the `labchronicle` module.
 
-### Data retrival
+### Data retrieval
 
-The data can be retrieved using the `labchronicle` module. The `labchronicle` module provides a `Chronicle` class that
-can be used to access the database. The `Chronicle` class can be initialized with the experiment name, and the
+The simplest way to access the saved log file is by using the following short cut functions:
+
+```python
+#just need to specify either record_id or record_entry_path
+exp_obj = labchronicle.load_object(record_book_path, record_id, record_entry_path)  
+exp_attributes = load_attributes(record_book_path, record_id, record_entry_path)
+```
+
+For more detailed data retrieval, the `labchronicle` module provides a `Chronicle` class that
+can be used to access the database. The `Chronicle` class can be initialized with the experiment name.
+See example here:
 
 ```python
 ch = labchronicle.Chronicle()
