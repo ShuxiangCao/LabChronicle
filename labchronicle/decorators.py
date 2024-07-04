@@ -90,9 +90,6 @@ def _log_and_record(func, args, kwargs, record_details=True, overwrite_func_name
 
         name = overwrite_func_name if overwrite_func_name is not None else func.__qualname__
 
-        if overwrite_func_name is not None:
-            print(overwrite_func_name)
-            pass
         record.set_name(name)
         record.record_metadata()
         record.record_args(args[1:], kwargs)
