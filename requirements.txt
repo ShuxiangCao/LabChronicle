@@ -3,3 +3,5 @@ numpy
 pyyaml
 decorator
 h5py
+markdownify
+ipywidgets
