@@ -53,32 +53,39 @@ class Chronicle(Singleton):
     It is used as a singleton.
     """
 
-    def __init__(self, config_path: Optional[Union[pathlib.Path, str]] = None):
+    def __init__(self, config:dict=None, config_path: Optional[Union[pathlib.Path, str]] = None):
         """
         Initialize the Chronicle class.
 
         Parameters:
+            config (dict): Optional. The configuration dictionary.
             config_path (str): Optional. The path to the configuration file.
         """
 
         if self._initialized:
             return
 
-        self._config = self.load_config(config_path)
+        self._config = self.load_config(config,config_path)
         self._active_record_book = None
         self._record_tracking_stack = None
         self._log_start_time = None
 
         super().__init__()
 
-    def load_config(self, config_path: Optional[str] = None):
+    def load_config(self,config_path: Optional[str] = None,config:dict=None):
         """
         Load the configuration file. If the configuration file is not specified, load the configuration from
         environment variables. If environment variables are not specified, load the default configuration.
 
         Parameters:
             config_path (str): Optional. The path to the configuration file.
+            config (dict): Optional. The configuration dictionary.
+
+        When both config and config_path are provided, the config with usee the dictionary provided in config
+        and update it with the values.
         """
+
+        _config_update = config if config is not None else {}
 
         # Load the configuration from the file
         if config_path is not None:
@@ -89,6 +96,8 @@ class Chronicle(Singleton):
 
         else:
             config = {}
+
+        config.update(_config_update)
 
         # Load the configuration from environment variables
         if "LAB_CHRONICLE_LOG_DIR" in os.environ and "log_path" not in config:
