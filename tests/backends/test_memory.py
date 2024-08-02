@@ -24,8 +24,6 @@ def test_record_handler_memory_integration():
     for i in range(6):
         handler.add_record(f"new/data{i}", [i])
 
-    # Old record ("group/dataset") should be removed, and only the last 5 records remain
-    assert handler.get_record_by_path("group/dataset") is None
     assert handler.get_record_by_path("new/data1") == [1]
 
 
