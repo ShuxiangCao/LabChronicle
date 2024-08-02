@@ -33,7 +33,7 @@ def test_config_from_file(tmp_path):
     with open(config_path, "w") as f:
         yaml.dump(config, f)
 
-    c = MockChronicle(config_path)
+    c = MockChronicle(config_path=config_path)
     assert c._config["log_path"] == "./test_log_read"
     assert c._config["handler"] == "test_handler_read"
 
