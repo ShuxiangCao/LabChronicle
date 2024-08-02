@@ -65,7 +65,7 @@ class Chronicle(Singleton):
         if self._initialized:
             return
 
-        self._config = self.load_config(config,config_path)
+        self._config = self.load_config(config=config,config_path=config_path)
         self._active_record_book = None
         self._record_tracking_stack = None
         self._log_start_time = None
