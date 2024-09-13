@@ -121,6 +121,8 @@ class RecordHandlerHDF5(RecordHandlersBase):
             record_path = record_path.as_posix()
 
         with self._open_file("r") as f:
+            from pathlib import PureWindowsPath
+            record_path = PureWindowsPath(record_path).as_posix()
             return f[record_path][()]
 
     def list_records(self, record_path: Union[pathlib.Path, str]) -> list:

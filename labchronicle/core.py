@@ -473,6 +473,12 @@ class RecordEntry(object):
             return
 
         path_name = path.name
+        path_name_split = path_name.split('\\')
+        if len(path_name_split) > 1:
+            self._base_path = pathlib.Path('\\'.join(path_name_split[:-1]))
+        else:
+            self._base_path = path.parent
+        path_name  = path_name_split[-1]
         splits = path_name.split("-", 1)
 
         if len(splits) != 2:
@@ -481,7 +487,6 @@ class RecordEntry(object):
             raise ValueError(msg)
 
         self._record_order, self._name = int(splits[0]), splits[1]
-        self._base_path = path.parent
         self._load_metadata()
 
     @property
